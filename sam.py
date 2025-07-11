@@ -45,7 +45,7 @@ game_scene = "level"
 player = pygame.Rect(player_x, player_y, player_width, player_height)
 enemy = pygame.Rect(500, 100, 64, 64)
 enemy_speed = 3
-enemy_direction = 1  # 1 = right, -1 = left
+
 
 coins = [
     pygame.Rect(300, 100, coin_image.get_width(), coin_image.get_height()),
@@ -117,10 +117,13 @@ def draw_swords():
 while True:
     clock.tick(fps)
 
-    # Enemy movement (left ↔ right)
-    enemy.x += enemy_speed * enemy_direction
-    if enemy.right >= screen_width or enemy.left <= 0:
-        enemy_direction *= -1  # Reverse direction
+    # === Enemy follows the player ===
+    dx = player.x - enemy.x
+    dy = player.y - enemy.y
+    distance = max(1, (dx**2 + dy**2) ** 0.5)
+    enemy.x += int(enemy_speed * dx / distance)
+    enemy.y += int(enemy_speed * dy / distance)
+
 
     # Sword pickup check
     for sword in swords:
