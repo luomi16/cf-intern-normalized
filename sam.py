@@ -19,10 +19,10 @@ pygame.display.set_icon(icon)
 # Load images
 background = pygame.transform.scale(pygame.image.load('images/background.png'), (screen_width, screen_height))
 player_image = pygame.image.load("images/character.png")
-sword_player_image = pygame.image.load("images/sword person.png")
+sword_player_image = pygame.image.load("images/swword person.png")  # Check spelling of "sword"
 enemy_image = pygame.image.load("images/Bob.png")
 coin_image = pygame.image.load("images/coin.png")
-sword_image = pygame.image.load("images/sword.png")
+sword_image = pygame.image.load("images/swword.png")
 goal_image = pygame.image.load("images/goal.png")
 
 # Font and colors
@@ -44,6 +44,9 @@ game_scene = "level"
 # Rects
 player = pygame.Rect(player_x, player_y, player_width, player_height)
 enemy = pygame.Rect(500, 100, 64, 64)
+enemy_speed = 3
+enemy_direction = 1  # 1 = right, -1 = left
+
 coins = [
     pygame.Rect(300, 100, coin_image.get_width(), coin_image.get_height()),
     pygame.Rect(400, 200, coin_image.get_width(), coin_image.get_height()),
@@ -67,7 +70,7 @@ def draw_sprites():
     current_player_image = sword_player_image if has_sword else player_image
     screen.blit(current_player_image, player)
 
-    # Only show sword if not yet picked up
+    # Show swords (if not yet picked up)
     if not has_sword:
         for sword in swords:
             screen.blit(sword_image, sword)
@@ -76,10 +79,11 @@ def draw_sprites():
     draw_coins()
     draw_swords()
 
-    # UI
+    # UI bar + Score
     pygame.draw.rect(screen, UI_color, score_ui)
     draw_text("Score: " + str(score), game_font, text_color, 10, 10)
 
+    # Goal
     screen.blit(goal_image, goal)
     if player.colliderect(goal):
         global game_scene
@@ -113,7 +117,12 @@ def draw_swords():
 while True:
     clock.tick(fps)
 
-    # Handle sword pickup
+    # Enemy movement (left ↔ right)
+    enemy.x += enemy_speed * enemy_direction
+    if enemy.right >= screen_width or enemy.left <= 0:
+        enemy_direction *= -1  # Reverse direction
+
+    # Sword pickup check
     for sword in swords:
         if not has_sword and player.colliderect(sword):
             has_sword = True
@@ -124,7 +133,7 @@ while True:
             pygame.quit()
             sys.exit()
 
-    # Movement keys
+    # Player movement
     keys = pygame.key.get_pressed()
     if keys[pygame.K_d]:
         player.move_ip(player_speed, 0)
@@ -143,14 +152,14 @@ while True:
         if player.y >= screen_height - player_height:
             player.y = screen_height - player_height
 
-    # Draw according to game scene
+    # Draw scenes
     if game_scene == "level":
         screen.blit(background, (0, 0))
         draw_sprites()
     elif game_scene == "title":
-        screen.fill((133, 12, 176))  # title_color
+        screen.fill((133, 12, 176))
     elif game_scene == "game_over":
-        screen.fill((255, 0, 0))  # game_over_color
+        screen.fill((255, 0, 0))
     elif game_scene == "you_win":
         screen.fill((0, 0, 0))
         draw_text("YOU WIN!", game_font, text_color, screen_width // 2 - 60, screen_height // 2)
