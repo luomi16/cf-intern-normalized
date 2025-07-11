@@ -1,4 +1,3 @@
-
 import pygame
 import sys
 
@@ -15,10 +14,11 @@ player_color = (95, 235, 128)
 bg_color = (0, 0, 0)
 text_color = (255, 255, 255)
 
-# --- Score Settings ---
+# --- Game State ---
 score = 0
 elapsed = 0
 scoring_interval = 1000  # Add 1000 points every 1000 milliseconds
+game_over = False
 
 # --- Load Images ---
 iron_man = pygame.image.load("images/player.png")
@@ -85,6 +85,16 @@ def update_fireballs():
     for fireball in fireballs:
         screen.blit(fireball_image, fireball)
 
+# Check if any fireball hits the player
+def check_fireball_collision():
+    global game_over
+    for fireball in fireballs:
+        if fireball.colliderect(player):
+            game_over = True
+            print("Game Over!")
+            return True
+    return False
+
 # Draw all game sprites
 def draw_sprites():
     screen.blit(iron_man, player)
@@ -93,6 +103,10 @@ def draw_sprites():
     draw_enemy()
     update_fireballs()
 
+    if game_over:
+        game_over_font = pygame.font.SysFont("", 80)
+        draw_text("GAME OVER", game_over_font, (255, 0, 0), screen_width // 2 - 200, screen_height // 2 - 50)
+
 # --- Game Loop ---
 while True:
     clock.tick(fps)
@@ -100,28 +114,32 @@ while True:
     dt = clock.tick(fps) / 1000.0
     elapsed += dt * 1000
 
-    # Increase score every scoring interval
-    while elapsed >= scoring_interval:
-        score += 1000
-        elapsed -= scoring_interval
-
     # Handle events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit()
 
-    # Move player
-    key = pygame.key.get_pressed()
-    if key[pygame.K_w]:
-        player.y -= player_speed
-    elif key[pygame.K_s]:
-        player.y += player_speed
+    if not game_over:
+        # Player movement
+        key = pygame.key.get_pressed()
+        if key[pygame.K_w]:
+            player.y -= player_speed
+        elif key[pygame.K_s]:
+            player.y += player_speed
 
-    # Fireball spawn logic
-    fireball_timer += clock.get_time()
-    if fireball_timer >= fireball_interval:
-        fireball_timer = 0
-        spawn_fireball()
+        # Score update
+        while elapsed >= scoring_interval:
+            score += 1000
+            elapsed -= scoring_interval
+
+        # Fireball spawn logic
+        fireball_timer += clock.get_time()
+        if fireball_timer >= fireball_interval:
+            fireball_timer = 0
+            spawn_fireball()
+
+        # Check collision
+        check_fireball_collision()
 
     # Draw everything
     screen.fill(bg_color)
